@@ -22,6 +22,7 @@ public abstract class BaseJobTrigger implements IJobTrigger{
     protected String description;
     protected String targetJob;
     protected String timezone;
+    protected boolean isTime;
 
 
     @Override
@@ -83,7 +84,7 @@ public abstract class BaseJobTrigger implements IJobTrigger{
     public void setChildren(List<IJobTrigger> children) {
         this.children = children;
     }
-    public void setStatus(JobTriggerStatus status) {
+    public synchronized void setStatus(JobTriggerStatus status) {
         this.status = status;
     }
     @Override
@@ -121,5 +122,11 @@ public abstract class BaseJobTrigger implements IJobTrigger{
     @Override
     public String getTimezone() {
         return timezone;
+    }
+    public boolean isTime() {
+        return isTime;
+    }
+    public void setTime(boolean isTime) {
+        this.isTime = isTime;
     }
 }

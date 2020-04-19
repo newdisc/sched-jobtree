@@ -35,7 +35,7 @@ public class JobTriggerService {
 
     public void initiateRun() {
         logger.info("NOW RUNNING: ==========");
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 800; i++) {
             List<? extends IJobTrigger> waitJobs = jobList.stream().map(j -> {
                 final JobTriggerStatus cStatus = j.getStatus();
                 final JobTriggerStatus nStatus = cStatus.nextState(j);
@@ -52,6 +52,12 @@ public class JobTriggerService {
             });
             waitJobs.forEach(j -> logger.info(j.toString()));
             logger.info("------------Done jobs: {}----------", i);
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                final String msg = "Interrupted!";
+                logger.error(msg, e);
+            }
         }
     }
     public void executeJob(IJobTrigger j){
@@ -78,5 +84,8 @@ public class JobTriggerService {
     }
     public void setExecutorFacade(AsyncExecutorFacade executorFacade) {
         this.executorFacade = executorFacade;
+    }
+    public List<? extends IJobTrigger> getJobList() {
+        return jobList;
     }
 }

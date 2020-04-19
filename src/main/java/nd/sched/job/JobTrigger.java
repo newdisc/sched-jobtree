@@ -18,7 +18,7 @@ public class JobTrigger extends BaseJobTrigger {
         bret = IntStream
             .range(0, interestList.size())
             .allMatch(idx -> interestListStatus.get(idx).contains(interestList.get(idx).getStatus()));
-        bret = bret && (JobTriggerStatus.INITIALIZED == status);
+        bret = bret && isTime && (JobTriggerStatus.INITIALIZED == status);
         return bret;
     }
     @Override
@@ -41,6 +41,10 @@ public class JobTrigger extends BaseJobTrigger {
                 }
                 addInterestingJob(jDep, JobTriggerStatus.SUCCESS);
             });
+        isTime = true;
+        if (null != timeCondition && ! timeCondition.isEmpty()) {
+            isTime = false;
+        }
     }
     private void addInterestingJob(final JobTrigger jDep, JobTriggerStatus js) {
         //int useindex = getInterestList().size();

@@ -1,4 +1,4 @@
 parent,name,timeCondition,condition,targetJob,additionalArguments,description,timezone
-,root,5	0	?	*	1-5,,,arguments Unused,Daily Run box,Europe/London
+,root,0	0/1	*	?	*	*	*,,,arguments Unused,Daily Run box at5	0	?	*	1-5,Europe/London
 root,echo_trig,,sleep_trig,EchoCommand,abc d e,Test echo of all arguments - start with box after sleep,Europe/London
 root,sleep_trig,,,Sleep,10,Test sleep wait - immediate start with box,Europe/London

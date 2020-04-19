@@ -3,40 +3,56 @@ package nd.sched.service;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import nd.sched.job.factory.IJobFactory;
-import nd.sched.job.factory.JobFactory;
-import nd.sched.job.service.AsyncExecutorFacade;
-import nd.sched.job.service.ExecutorService;
+import nd.sched.job.service.TestAsyncEFCloseable;
 import nd.sched.job.service.JobTriggerService;
+import nd.sched.job.service.QuartzCronService;
 
 public class JobTriggerServiceTest {
     private static final Logger logger = LoggerFactory.getLogger(JobTriggerServiceTest.class);
+
+    public static class TestJobTriggerSvc extends TestAsyncEFCloseable {
+        public JobTriggerService jobTriggerService;
+        public QuartzCronService quartzCronService;
+
+        public TestJobTriggerSvc() {
+            super();
+            jobTriggerService = new JobTriggerService();
+            jobTriggerService.setExecutorFacade(asyncSvc);
+            try {
+                quartzCronService = new QuartzCronService();
+            } catch (SchedulerException e) {
+                final String msg = "Issue starting the cron service";    
+                logger.error(msg, e);
+            }
+        }
+        @Override
+        public void close() throws IOException {
+            super.close();
+            quartzCronService.close();
+        }
+    }
     @Test
     public void loadTriggersTest(){
-        final String cwd = Paths.get(".")
-            .toAbsolutePath()
-            .normalize()
-            .toString();
-        logger.info("CWD: {}", cwd);
-        ExecutorService execSvc = new ExecutorService();
-        IJobFactory jobFactory = new JobFactory();
-        execSvc.setJobFactory(jobFactory);
-        execSvc.load();
-        try (AsyncExecutorFacade asyncSvc = new AsyncExecutorFacade();) {
-            asyncSvc.setService(execSvc);
-            final JobTriggerService jts = new JobTriggerService();
-            jts.setExecutorFacade(asyncSvc);
+        try (TestJobTriggerSvc jtst = new TestJobTriggerSvc();) {
+            final JobTriggerService jts = jtst.jobTriggerService;
+            final QuartzCronService qcs = jtst.quartzCronService;
             logger.info("Loading Triggers");
             jts.loadTriggers();
+            logger.info("Loading Quartz triggers");
+            jts.getJobList()
+                .stream()
+                .filter(j -> (null != j.getTimeCondition() && ! j.getTimeCondition().isEmpty()))
+                .forEach(j -> {
+                    qcs.addJob(j);
+                });
             jts.initiateRun();
             assertTrue(true);
-
         } catch (IOException e) {
             final String msg = "Issue shutting down the async Service / running the task";    
             logger.error(msg, e);

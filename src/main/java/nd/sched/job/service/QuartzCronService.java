@@ -61,6 +61,7 @@ public class QuartzCronService implements Closeable {
     @Override
     public void close() throws IOException {
         try {
+            logger.info("Shutting down Quartz Scheduler");
             scheduler.shutdown(true);
         } catch (SchedulerException e) {
             final String msg = "Unable to Shutdown scheduler";

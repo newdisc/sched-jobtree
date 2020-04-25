@@ -22,7 +22,7 @@ public class JobTriggerService {
     private List<? extends IJobTrigger> jobList;
     private AsyncExecutorFacade executorFacade;
 
-    public void loadTriggers() {
+    public void loadTriggers(QuartzCronService quartzCronService) {
         List<? extends IJobTrigger> jobs = dao.registerJobTriggers();
         jobList = jobs;
         jobsHash = jobs.stream().collect(Collectors.toMap(j -> j.getName(), j -> j));
@@ -30,6 +30,9 @@ public class JobTriggerService {
         // Handle parent and interest list
         jobList.stream().forEach(job -> {
             job.computeCondition(jobsHash);
+            if (null != job.getTimeCondition() && ! job.getTimeCondition().isEmpty()) {
+                quartzCronService.addJob(job);
+            }
         });
     }
 

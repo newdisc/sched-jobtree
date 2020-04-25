@@ -12,10 +12,10 @@ public abstract class BaseJobTrigger implements IJobTrigger{
     protected String name;
     protected String additionalArguments;
     //private IJobTrigger parentLink;
-    protected List<IJobTrigger> interestList = new ArrayList<>();
-    protected List<Set<JobTriggerStatus>> interestListStatus = new ArrayList<>();
-    protected List<IJobTrigger> children = new ArrayList<>();
-    protected List<IJobTrigger> notifyList = new ArrayList<>();
+    protected transient List<IJobTrigger> interestList = new ArrayList<>();
+    protected transient List<Set<JobTriggerStatus>> interestListStatus = new ArrayList<>();
+    protected transient List<IJobTrigger> children = new ArrayList<>();
+    protected transient List<IJobTrigger> notifyList = new ArrayList<>();
     protected JobTriggerStatus status = JobTriggerStatus.CREATED;
     protected String condition;
     protected String timeCondition;

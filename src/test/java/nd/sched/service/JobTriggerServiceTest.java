@@ -43,14 +43,7 @@ public class JobTriggerServiceTest {
             final JobTriggerService jts = jtst.jobTriggerService;
             final QuartzCronService qcs = jtst.quartzCronService;
             logger.info("Loading Triggers");
-            jts.loadTriggers();
-            logger.info("Loading Quartz triggers");
-            jts.getJobList()
-                .stream()
-                .filter(j -> (null != j.getTimeCondition() && ! j.getTimeCondition().isEmpty()))
-                .forEach(j -> {
-                    qcs.addJob(j);
-                });
+            jts.loadTriggers(qcs);
             jts.initiateRun();
             assertTrue(true);
         } catch (IOException e) {

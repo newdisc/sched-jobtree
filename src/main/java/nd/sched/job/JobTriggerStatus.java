@@ -30,6 +30,7 @@ public enum JobTriggerStatus {
             final String tgt = job.getTargetJob();
             if (null == tgt || tgt.isEmpty()) {
                 job.setStatus(RUNNING);
+                job.getChildren().forEach(j -> j.setStatus(INITIALIZED));
                 return RUNNING;
             }
             return this;

@@ -22,7 +22,7 @@ public class QuartzJob implements Job {
         JobDataMap jobDataMap = context.getMergedJobDataMap(); 
         JobTrigger trigger = (JobTrigger)jobDataMap.get("jobTrigger");
         final JobTriggerStatus stat = trigger.getStatus();
-        logger.info("Checking to Set timer job to Waiting: {} from {}", trigger.getName(), stat);
+        logger.debug("Checking to Set timer job to Waiting: {} from {}", trigger.getName(), stat);
         trigger.setTime(true);
         if (allowedToWait.contains(stat)) {
             logger.info("Set timer job to Waiting: {} from: {}", trigger.getName(), stat);
@@ -31,7 +31,7 @@ public class QuartzJob implements Job {
     }
 
     public QuartzJob() {
-        JobTriggerStatus[] validStates = {JobTriggerStatus.RUNNING, JobTriggerStatus.INITIALIZED, 
+        JobTriggerStatus[] validStates = {JobTriggerStatus.INITIALIZED, 
             JobTriggerStatus.SUCCESS, JobTriggerStatus.CREATED};
         this.allowedToWait = Arrays.stream(validStates).collect(Collectors.toSet());
     }

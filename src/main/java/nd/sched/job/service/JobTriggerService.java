@@ -37,11 +37,11 @@ public class JobTriggerService {
     }
 
     public void initiateRun() {
-        logger.info("NOW RUNNING: ==========");
+        logger.info("initiateRun loop: ==========");
         //final Executor exsvc = executorFacade.getExecutor();
         List<CompletableFuture<JobReturn>> runningJobs = new ArrayList<>();
         int i = 0;
-        while (true) {
+        for (; i < 10; ) {
             int nPendingJobs = jobList
                 .stream()
                 .filter(j -> (JobTriggerStatus.SUCCESS != j.getStatus() && JobTriggerStatus.FAILURE != j.getStatus()))
@@ -56,7 +56,8 @@ public class JobTriggerService {
                 .collect(Collectors.toList());
             final List<IJobTrigger> waitJobs = determineJobsToRun();
             if (0 == waitJobs.size()) {
-                safeSleep(10000);
+                logger.info("No jobs to run - sleeping for 10");
+                JobTriggerWorker.safeSleep(10000);
                 i++;
                 continue;
             }
@@ -76,17 +77,7 @@ public class JobTriggerService {
             }
             
             logger.info("------------Done jobs: {}----------", i);
-            safeSleep(10000);
             i++;
-        }
-    }
-
-    private void safeSleep(int nMSec) {
-        try {
-            Thread.sleep(nMSec);
-        } catch (InterruptedException e) {
-            final String msg = "Interrupted!";
-            logger.error(msg, e);
         }
     }
 

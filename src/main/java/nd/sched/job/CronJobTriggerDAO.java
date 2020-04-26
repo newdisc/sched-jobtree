@@ -11,7 +11,7 @@ public class CronJobTriggerDAO {
     private static final Logger logger = LoggerFactory.getLogger(CronJobTriggerDAO.class);
     public static final String TRIGGER_FILE = "triggers.csv";
     public List<? extends IJobTrigger> registerJobTriggers(){
-        logger.info("Loading Triggers from triggers.csv");
+        logger.debug("Loading Triggers from triggers.csv");
         List<? extends IJobTrigger> triggers = JobRegistryPopulator.createBeans("./" + TRIGGER_FILE, JobTrigger.class);
         logger.info("Triggers found: ");
         triggers

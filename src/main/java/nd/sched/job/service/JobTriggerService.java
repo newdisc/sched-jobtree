@@ -3,6 +3,7 @@ package nd.sched.job.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -34,6 +35,20 @@ public class JobTriggerService {
                 quartzCronService.addJob(job);
             }
         });
+    }
+    
+    public JobTriggerStatus runJob(final String triggerName) {
+        logger.info("Running JobTrigger: {}", triggerName);
+        final List<? extends IJobTrigger> triggers = getJobList();
+        final Optional<? extends IJobTrigger> jobtrigger = triggers
+            .stream()
+            .filter(jt -> (triggerName.equals(jt.getName())))
+            .findAny();
+        if (jobtrigger.isEmpty()) {
+            return JobTriggerStatus.FAILURE;
+        }
+        jobtrigger.get().setStatus(JobTriggerStatus.WAITING);
+        return JobTriggerStatus.WAITING;
     }
 
     public void initiateRun() {

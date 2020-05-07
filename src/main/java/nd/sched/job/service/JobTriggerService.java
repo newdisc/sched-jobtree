@@ -105,6 +105,9 @@ public class JobTriggerService {
                 if (cStatus != nStatus) {
                     return j;
                 }
+                if (JobTriggerStatus.WAITING == j.getStatus()) {
+                    return j;
+                }
                 return null;
             })
             .filter(j -> (null != j && JobTriggerStatus.WAITING == j.getStatus()))

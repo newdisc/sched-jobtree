@@ -53,7 +53,7 @@ public enum JobTriggerStatus {
             }
             boolean anyWaitRun = children
                 .stream()
-                .anyMatch(j -> (RUNNING == j.getStatus() || WAITING == j.getStatus()));
+                .anyMatch(j -> (RUNNING == j.getStatus() || WAITING == j.getStatus()) || INITIALIZED == j.getStatus());
             if (anyWaitRun) {
                 return this;
             }

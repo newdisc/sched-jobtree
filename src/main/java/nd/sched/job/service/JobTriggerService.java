@@ -121,7 +121,7 @@ public class JobTriggerService {
         final String tgtJob = j.getTargetJob();
         final String args = j.getArguments();
         final CompletableFuture<JobReturn> fjr = executorFacade
-            .execute(tgtJob, args)
+            .execute(j.getName(), tgtJob, args)
             .thenApply(jr -> {
                 switch (jr.jobStatus) {
                     case SUCCESS :

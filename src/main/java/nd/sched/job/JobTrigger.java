@@ -47,7 +47,6 @@ public class JobTrigger extends BaseJobTrigger {
         }
     }
     private void addInterestingJob(final JobTrigger jDep, JobTriggerStatus js) {
-        //int useindex = getInterestList().size();
         getInterestList().add(jDep);
         Set<JobTriggerStatus> statusSet = new HashSet<>();
         statusSet.add(js);

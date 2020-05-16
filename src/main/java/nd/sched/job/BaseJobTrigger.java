@@ -7,15 +7,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class BaseJobTrigger implements IJobTrigger{
-    //private static final Logger logger = LoggerFactory.getLogger(BaseJobTrigger.class);
     protected String parent;
     protected String name;
     protected String additionalArguments;
-    //private IJobTrigger parentLink;
-    protected transient List<IJobTrigger> interestList = new ArrayList<>();
-    protected transient List<Set<JobTriggerStatus>> interestListStatus = new ArrayList<>();
-    protected transient List<IJobTrigger> children = new ArrayList<>();
-    protected transient List<IJobTrigger> notifyList = new ArrayList<>();
+    protected List<IJobTrigger> interestList = new ArrayList<>();
+    protected List<Set<JobTriggerStatus>> interestListStatus = new ArrayList<>();
+    protected List<IJobTrigger> children = new ArrayList<>();
+    protected List<IJobTrigger> notifyList = new ArrayList<>();
     protected JobTriggerStatus status = JobTriggerStatus.CREATED;
     protected String condition;
     protected String timeCondition;
@@ -67,7 +65,7 @@ public abstract class BaseJobTrigger implements IJobTrigger{
         return interestList;
     }
     @Override
-    public JobTriggerStatus getStatus() {
+    public synchronized JobTriggerStatus getStatus() {
         return status;
     }
     @Override

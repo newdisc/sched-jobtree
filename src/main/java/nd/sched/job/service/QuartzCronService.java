@@ -46,7 +46,6 @@ public class QuartzCronService implements Closeable {
             .withIdentity(name, "JobDetails")
             .withDescription(trigger.getDescription())
             .build();
-        //final ScheduleBuilder<CronTrigger> sb = CronScheduleBuilder.cronSchedule(trigger.getTimeCondition());
         final Trigger trg = TriggerBuilder
             .newTrigger()
             .withIdentity(name, "Triggers")
@@ -56,7 +55,7 @@ public class QuartzCronService implements Closeable {
         try {
             Date dt = scheduler.scheduleJob(jd, trg);
             logger.info("Scheduled job: {} with schedule: {} and date: {}", 
-                name, trigger.getTimeCondition(), dt.toString());
+                name, trigger.getTimeCondition(), dt);
         } catch (SchedulerException e) {
             final String msg = "Unable to add time schedule for job: " + name;
             logger.error(msg, e);

@@ -18,7 +18,6 @@ public class CronJobTriggerDAO {
             .stream()
             .map(IJobTrigger::toString)
             .forEach(logger::info);
-        //logger.info("Triggers found: {}", triggers);
         return triggers;
     }
 

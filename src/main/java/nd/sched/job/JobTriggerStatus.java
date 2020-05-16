@@ -74,9 +74,6 @@ public enum JobTriggerStatus {
         return this;//This is a final state, only can be force started now
     }
     public boolean isFinal() {
-        if (SUCCESS == this || FAILURE == this || ICE == this) {
-            return true;
-        } 
-        return false;
+        return (SUCCESS == this || FAILURE == this || ICE == this);
     }
 }

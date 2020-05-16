@@ -18,16 +18,15 @@ public class JobTriggerWorker implements Closeable {
         Thread current = Thread.currentThread();
         current.setName("JobTriggerWorker-" + current.getId());
         logger.info("Running thread");
-            try {
-                jobTriggerService.initiateRun();
-            } catch (InterruptedException | ExecutionException e) {
-                final String msg = "Issue running jobs!";
-                logger.error(msg, e);
-            }
-            if (javaExecutorService.isShutdown()) {
-                logger.info("Exiting JobTriggerWorker : {}", current.getName());
-                return;
-            }
+        try {
+            jobTriggerService.initiateRun();
+        } catch (InterruptedException | ExecutionException e) {
+            final String msg = "Issue running jobs!";
+            logger.error(msg, e);
+        }
+        if (javaExecutorService.isShutdown()) {
+            logger.info("Exiting JobTriggerWorker : {}", current.getName());
+        }
     }
 
     @Override
@@ -38,8 +37,6 @@ public class JobTriggerWorker implements Closeable {
     }
     public void setJobTriggerService(JobTriggerService jobTriggerService) {
         this.jobTriggerService = jobTriggerService;
-        javaExecutorService.submit(()->{
-            serviceThread();
-        });
+        javaExecutorService.submit(this::serviceThread);
     }
 }

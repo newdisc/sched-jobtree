@@ -2,6 +2,7 @@ package nd.sched.job.service;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Date;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -23,6 +24,7 @@ public class QuartzCronService implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(QuartzCronService.class);
     private final SchedulerFactory schedulerFactory;
     private final Scheduler scheduler;
+    private JobTriggerService jobTriggerService;
 
     public QuartzCronService() throws SchedulerException {
         schedulerFactory = new StdSchedulerFactory();
@@ -37,6 +39,7 @@ public class QuartzCronService implements Closeable {
         final String name = trigger.getName() + "_quartz";
         final JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("jobTrigger", trigger);
+        jobDataMap.put("jobTriggerService", jobTriggerService);
         JobDetail jd = JobBuilder
             .newJob(QuartzJob.class)
             .usingJobData(jobDataMap)
@@ -51,7 +54,9 @@ public class QuartzCronService implements Closeable {
             .build();
 
         try {
-            scheduler.scheduleJob(jd, trg);
+            Date dt = scheduler.scheduleJob(jd, trg);
+            logger.info("Scheduled job: {} with schedule: {} and date: {}", 
+                name, trigger.getTimeCondition(), dt.toString());
         } catch (SchedulerException e) {
             final String msg = "Unable to add time schedule for job: " + name;
             logger.error(msg, e);
@@ -67,5 +72,8 @@ public class QuartzCronService implements Closeable {
             final String msg = "Unable to Shutdown scheduler";
             logger.error(msg, e);
         }
+    }
+    public void setJobTriggerService(JobTriggerService jobTriggerService) {
+        this.jobTriggerService = jobTriggerService;
     }
 }

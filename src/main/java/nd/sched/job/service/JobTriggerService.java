@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -18,10 +20,13 @@ import nd.sched.job.IJobExecutor.JobReturn;
 
 public class JobTriggerService {
     private static final Logger logger = LoggerFactory.getLogger(JobTriggerService.class);
+    public static final String ENDLOOP_JOB = "DUMMY_SHUTDOWN_TRIGGER";
+
     private CronJobTriggerDAO dao = new CronJobTriggerDAO();
     private Map<String, IJobTrigger> jobsHash;
     private List<? extends IJobTrigger> jobList;
     private AsyncExecutorFacade executorFacade;
+    private BlockingQueue<String> jobTriggerQueue;
 
     public void loadTriggers(QuartzCronService quartzCronService) {
         List<? extends IJobTrigger> jobs = dao.registerJobTriggers();
@@ -31,19 +36,17 @@ public class JobTriggerService {
         // Handle parent and interest list
         jobList.stream().forEach(job -> {
             job.computeCondition(jobsHash);
-            if (null != job.getTimeCondition() && ! job.getTimeCondition().isEmpty()) {
+            if (null != job.getTimeCondition() && !job.getTimeCondition().isEmpty()) {
                 quartzCronService.addJob(job);
             }
         });
     }
-    
+
     public JobTriggerStatus runJob(final String triggerName) {
         logger.info("Running JobTrigger: {}", triggerName);
         final List<? extends IJobTrigger> triggers = getJobList();
-        final Optional<? extends IJobTrigger> jobtrigger = triggers
-            .stream()
-            .filter(jt -> (triggerName.equals(jt.getName())))
-            .findAny();
+        final Optional<? extends IJobTrigger> jobtrigger = triggers.stream()
+                .filter(jt -> (triggerName.equals(jt.getName()))).findAny();
         if (jobtrigger.isEmpty()) {
             return JobTriggerStatus.FAILURE;
         }
@@ -51,89 +54,99 @@ public class JobTriggerService {
         return JobTriggerStatus.WAITING;
     }
 
-    public void initiateRun() {
+    public void initiateRun() throws InterruptedException, ExecutionException {
         logger.info("initiateRun loop: ==========");
-        //final Executor exsvc = executorFacade.getExecutor();
         List<CompletableFuture<JobReturn>> runningJobs = new ArrayList<>();
-        int i = 0;
-        for (; i < 10; ) {
-            int nPendingJobs = jobList
-                .stream()
-                .filter(j -> (JobTriggerStatus.SUCCESS != j.getStatus() && JobTriggerStatus.FAILURE != j.getStatus()))
-                .collect(Collectors.toList())
+        boolean bLoop = true;
+        while (bLoop) {
+            final String triggerJob = jobTriggerQueue.poll(1, TimeUnit.MINUTES);
+            if (null != triggerJob && ENDLOOP_JOB.equals(triggerJob)) {
+                bLoop = false;
+            }
+            if (null != triggerJob) {
+                logger.info("Handling Job complete of: {}", triggerJob);
+            } else {
+                logger.info("Handling timeout on wait");
+            }
+            int nPendingJobs = jobList.stream()
+                .filter(j -> !j.getStatus().isFinal()).collect(Collectors.toList())
                 .size();
             if (0 == nPendingJobs) {
-                return;
-            }
-            runningJobs = runningJobs
-                .stream()
-                .filter(j -> !j.isDone()) // jobs that are running are not done
-                .collect(Collectors.toList());
-            final List<IJobTrigger> waitJobs = determineJobsToRun();
-            if (0 == waitJobs.size()) {
-                logger.info("No jobs to run - sleeping for 10");
-                JobTriggerWorker.safeSleep(10000);
-                i++;
+                logger.info("Invalid/Handled wakeup: {}", triggerJob);
                 continue;
             }
 
-            final List<CompletableFuture<JobReturn>> runJobs = waitJobs
-                    .stream()
-                    .map(j -> executeJob((IJobTrigger) j))
-                    .collect(Collectors.toList());
+            runningJobs = runningJobs.stream()
+                .filter(j -> {
+                    boolean isDone = j.isDone();
+                    return !isDone;
+                }) // jobs that are running are not done
+                .collect(Collectors.toList());
+            final List<IJobTrigger> waitJobs = determineJobsToRun();
+
+            final List<CompletableFuture<JobReturn>> runJobs = waitJobs.stream()
+                .map(j -> executeJob((IJobTrigger) j))
+                .collect(Collectors.toList());
             runningJobs.addAll(runJobs);
-            try {
+
+            if (runningJobs.size() > 0) {
                 JobReturn jr = (JobReturn) CompletableFuture
-                        .anyOf(runningJobs.toArray(new CompletableFuture[waitJobs.size()])).get();
+                    .anyOf(runningJobs.toArray(new CompletableFuture[runningJobs.size()])).get();
                 logger.info("One job returned: {}", jr.jobStatus);
-            } catch (InterruptedException | ExecutionException e) {
-                final String msg = "Issue waiting for jobs!";
-                logger.error(msg, e);
             }
-            
-            logger.info("------------Done jobs: {}----------", i);
-            i++;
+            logger.info("------------Done jobs trigger: {}----------", triggerJob);
         }
     }
 
     private List<IJobTrigger> determineJobsToRun() {
-        final List<IJobTrigger> waitJobs = jobList
-            .stream()
-            .map(j -> {
-                final JobTriggerStatus cStatus = j.getStatus();
-                final JobTriggerStatus nStatus = cStatus.nextState(j);
-                if (cStatus != nStatus) {
-                    return j;
-                }
-                if (JobTriggerStatus.WAITING == j.getStatus()) {
-                    return j;
-                }
-                return null;
-            })
-            .filter(j -> (null != j && JobTriggerStatus.WAITING == j.getStatus()))
-            .filter(j -> (null == j.getChildren() || 0 == j.getChildren().size())).collect(Collectors.toList());
+        final List<IJobTrigger> waitJobs = jobList.stream().map(j -> {
+            final JobTriggerStatus cStatus = j.getStatus();
+            final JobTriggerStatus nStatus = cStatus.nextState(j);
+            if (cStatus != nStatus) {
+                return j;
+            }
+            if (JobTriggerStatus.WAITING == j.getStatus()) {
+                return j;
+            }
+            return null;
+        }).filter(j -> (null != j && JobTriggerStatus.WAITING == j.getStatus()))
+                .filter(j -> (null == j.getChildren() || 0 == j.getChildren().size())).collect(Collectors.toList());
         logger.info("------------Run following jobs: -----------");
         waitJobs.forEach(j -> logger.info(j.toString()));
         return waitJobs;
     }
-    public CompletableFuture<JobReturn> executeJob(IJobTrigger j){
+
+    public CompletableFuture<JobReturn> executeJob(IJobTrigger j) {
         j.setStatus(JobTriggerStatus.RUNNING);
         final String tgtJob = j.getTargetJob();
         final String args = j.getArguments();
-        final CompletableFuture<JobReturn> fjr = executorFacade
-            .execute(j.getName(), tgtJob, args)
-            .thenApply(jr -> {
-                switch (jr.jobStatus) {
-                    case SUCCESS :
-                        j.setStatus(JobTriggerStatus.SUCCESS);
-                    break;
-                    default:
-                        j.setStatus(JobTriggerStatus.FAILURE);
-                    break;
-                } 
-                return jr;
-            });
+        final CompletableFuture<JobReturn> fjr = executorFacade.execute(j.getName(), tgtJob, args).thenApply(jr -> {
+            return onJobComplete(j, jr);
+        });
         return fjr;
+    }
+
+    private JobReturn onJobComplete(IJobTrigger j, JobReturn jr) {
+        final String jobName = j.getName();
+        signalJob(jobName);
+        switch (jr.jobStatus) {
+            case SUCCESS :
+                j.setStatus(JobTriggerStatus.SUCCESS);
+            break;
+            default:
+                j.setStatus(JobTriggerStatus.FAILURE);
+            break;
+        } 
+        return jr;
+    }
+
+    public void signalJob(final String jobName) {
+        try {
+            jobTriggerQueue.put(jobName);
+        } catch (InterruptedException e) {
+            final String msg = "Issue signalling the JobTriggerQueue!";
+            logger.error(msg, e);
+        }
     }
     public AsyncExecutorFacade getExecutorFacade() {
         return executorFacade;
@@ -144,19 +157,13 @@ public class JobTriggerService {
     public List<? extends IJobTrigger> getJobList() {
         return jobList;
     }
+    public void setJobTriggerQueue(BlockingQueue<String> jobTriggerQueue) {
+        this.jobTriggerQueue = jobTriggerQueue;
+    }
 }
-/*
-        JobReturn jr;
-        try {
-            jr = fjr.get();
-            logger.info("Job Returned: {}", jr.returnValue);
-            if (JobStatus.SUCCESS == jr.jobStatus) {
-                j.setStatus(JobTriggerStatus.SUCCESS);
-                return;
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            final String msg = "Failed to retrieve job status - " + tgtJob;
-            logger.error(msg,e);
-        }
-        j.setStatus(JobTriggerStatus.FAILURE);
-*/
+
+                    /*
+                    if (isDone) {
+                        logger.info("Job returned: {}", j.get().jobStatus);
+                    }
+                    */

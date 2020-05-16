@@ -3,6 +3,7 @@ package nd.sched.service;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 import org.quartz.SchedulerException;
@@ -27,18 +28,20 @@ public class JobTriggerServiceTest {
             try {
                 quartzCronService = new QuartzCronService();
             } catch (SchedulerException e) {
-                final String msg = "Issue starting the cron service";    
+                final String msg = "Issue starting the cron service";
                 logger.error(msg, e);
             }
         }
+
         @Override
         public void close() throws IOException {
             super.close();
             quartzCronService.close();
         }
     }
+
     @Test
-    public void loadTriggersTest(){
+    public void loadTriggersTest() throws InterruptedException, ExecutionException {
         try (TestJobTriggerSvc jtst = new TestJobTriggerSvc();) {
             final JobTriggerService jts = jtst.jobTriggerService;
             final QuartzCronService qcs = jtst.quartzCronService;

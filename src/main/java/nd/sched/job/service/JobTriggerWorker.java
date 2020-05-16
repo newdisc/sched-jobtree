@@ -2,6 +2,7 @@ package nd.sched.job.service;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,28 +18,22 @@ public class JobTriggerWorker implements Closeable {
         Thread current = Thread.currentThread();
         current.setName("JobTriggerWorker-" + current.getId());
         logger.info("Running thread");
-        while (true) {
-            jobTriggerService.initiateRun();
+            try {
+                jobTriggerService.initiateRun();
+            } catch (InterruptedException | ExecutionException e) {
+                final String msg = "Issue running jobs!";
+                logger.error(msg, e);
+            }
             if (javaExecutorService.isShutdown()) {
                 logger.info("Exiting JobTriggerWorker : {}", current.getName());
-                break;
+                return;
             }
-            safeSleep(10000);
-        }
-    }
-
-    public static void safeSleep(int nMSec) {
-        try {
-            Thread.sleep(nMSec);
-        } catch (InterruptedException e) {
-            final String msg = "Interrupted!";
-            logger.error(msg, e);
-        }
     }
 
     @Override
     public void close() throws IOException {
         logger.info("Shutting down JobTriggerWorker thread");
+        jobTriggerService.signalJob(JobTriggerService.ENDLOOP_JOB);
         javaExecutorService.shutdown();
     }
     public void setJobTriggerService(JobTriggerService jobTriggerService) {

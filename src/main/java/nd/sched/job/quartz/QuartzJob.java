@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import nd.sched.job.JobTrigger;
 import nd.sched.job.JobTriggerStatus;
+import nd.sched.job.service.JobTriggerService;
 
 public class QuartzJob implements Job {
     private static final Logger logger = LoggerFactory.getLogger(QuartzJob.class);
@@ -21,8 +22,10 @@ public class QuartzJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap jobDataMap = context.getMergedJobDataMap(); 
         JobTrigger trigger = (JobTrigger)jobDataMap.get("jobTrigger");
+        JobTriggerService jobTriggerService = (JobTriggerService)jobDataMap.get("jobTriggerService");
         final JobTriggerStatus stat = trigger.getStatus();
-        logger.debug("Checking to Set timer job to Waiting: {} from {}", trigger.getName(), stat);
+        logger.info("Checking to Set timer job to Waiting: {} from {}", trigger.getName(), stat);
+        jobTriggerService.signalJob(trigger.getName());
         trigger.setTime(true);
         if (allowedToWait.contains(stat)) {
             logger.info("Set timer job to Waiting: {} from: {}", trigger.getName(), stat);

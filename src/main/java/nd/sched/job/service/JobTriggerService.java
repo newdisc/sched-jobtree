@@ -57,7 +57,7 @@ public class JobTriggerService {
     }
 
     public void initiateRun() throws InterruptedException, ExecutionException {
-        logger.info("initiateRun loop: ==========");
+        logger.debug("initiateRun loop: ==========");
         List<CompletableFuture<JobReturn>> runningJobs = new ArrayList<>();
         signalJob("DUMMY_START_JOBS");
         boolean bLoop = true;
@@ -70,7 +70,7 @@ public class JobTriggerService {
                 bLoop = false;
                 break;
             }
-            logger.info("Handling Job complete of: {}", triggerJob);
+            logger.info("--------Handling Job complete of: {} ---------------", triggerJob);
 
             final List<IJobTrigger> waitJobs = determineJobsToRun();
             final List<CompletableFuture<JobReturn>> runJobs = waitJobs.stream()
@@ -111,7 +111,7 @@ public class JobTriggerService {
             .filter(j -> (JobTriggerStatus.WAITING == j.getStatus()))
             .filter(j -> (null == j.getChildren() || j.getChildren().isEmpty())) // skip parentJobs
             .collect(Collectors.toList());
-        logger.info("------------Run following jobs: -----------");
+        logger.info("-Run following jobs: -");
         waitJobs.forEach(j -> logger.info(j.toString()));
         return waitJobs;
     }

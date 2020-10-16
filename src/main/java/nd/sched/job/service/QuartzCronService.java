@@ -3,6 +3,7 @@ package nd.sched.job.service;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -46,10 +47,12 @@ public class QuartzCronService implements Closeable {
             .withIdentity(name, "JobDetails")
             .withDescription(trigger.getDescription())
             .build();
+        final CronScheduleBuilder csb = CronScheduleBuilder.cronSchedule(trigger.getTimeCondition());
+        csb.inTimeZone(TimeZone.getTimeZone(trigger.getTimezone()));
         final Trigger trg = TriggerBuilder
             .newTrigger()
             .withIdentity(name, "Triggers")
-            .withSchedule(CronScheduleBuilder.cronSchedule(trigger.getTimeCondition()))
+            .withSchedule(csb)
             .build();
 
         try {

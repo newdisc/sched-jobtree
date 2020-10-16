@@ -45,7 +45,7 @@ public class JobTriggerService {
     }
 
     public JobTriggerStatus runJob(final String triggerName) {
-        logger.info("Running JobTrigger: {}", triggerName);
+        logger.debug("Running JobTrigger: {}", triggerName);
         final List<? extends IJobTrigger> triggers = getJobList();
         final Optional<? extends IJobTrigger> jobtrigger = triggers.stream()
                 .filter(jt -> (triggerName.equals(jt.getName()))).findAny();
@@ -65,12 +65,14 @@ public class JobTriggerService {
             String triggerJob = jobTriggerQueue.poll(1, TimeUnit.MINUTES);
             if (null == triggerJob) {
                 triggerJob = "TimeOut of Queue Poll";
+            } else {
+                logger.info("--------Handling Job complete/trigger of: {} ---------------", triggerJob);
             }
             if (ENDLOOP_JOB.equals(triggerJob)) {
                 bLoop = false;
                 break;
             }
-            logger.info("--------Handling Job complete of: {} ---------------", triggerJob);
+            logger.debug("--------Handling Job complete/trigger of: {} ---------------", triggerJob);
 
             final List<IJobTrigger> waitJobs = determineJobsToRun();
             final List<CompletableFuture<JobReturn>> runJobs = waitJobs.stream()
@@ -81,10 +83,12 @@ public class JobTriggerService {
                 .collect(Collectors.toList());//Reqd for exception propogation
             for (CompletableFuture<JobReturn> completeJob : completeJobs) {
                 final JobReturn jr = completeJob.get();
-                logger.info("Return: {}", jr);
+                if (JobStatus.SUCCESS != jr.getJobStatus()) {
+                    logger.error("Return: {}", jr);
+                }
             }
             runningJobs = runningJobs.stream().filter(j -> ! j.isDone()).collect(Collectors.toList());
-            logger.info("------------Done jobs trigger: {}----------", triggerJob);
+            logger.debug("------------Done jobs trigger: {}----------", triggerJob);
         }
     }
 
@@ -111,8 +115,10 @@ public class JobTriggerService {
             .filter(j -> (JobTriggerStatus.WAITING == j.getStatus()))
             .filter(j -> (null == j.getChildren() || j.getChildren().isEmpty())) // skip parentJobs
             .collect(Collectors.toList());
-        logger.info("-Run following jobs: -");
-        waitJobs.forEach(j -> logger.info(j.toString()));
+        if (waitJobs.isEmpty()) {
+            logger.info("-Run following jobs: -");
+            waitJobs.forEach(j -> logger.info(j.getName()));
+        }
         return waitJobs;
     }
 

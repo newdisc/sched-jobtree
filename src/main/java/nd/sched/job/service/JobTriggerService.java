@@ -3,6 +3,7 @@ package nd.sched.job.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -60,8 +61,7 @@ public class JobTriggerService {
         logger.debug("initiateRun loop: ==========");
         List<CompletableFuture<JobReturn>> runningJobs = new ArrayList<>();
         signalJob("DUMMY_START_JOBS");
-        boolean bLoop = true;
-        while (bLoop) {
+        while (true) {
             String triggerJob = jobTriggerQueue.poll(1, TimeUnit.MINUTES);
             if (null == triggerJob) {
                 triggerJob = "TimeOut of Queue Poll";
@@ -69,7 +69,6 @@ public class JobTriggerService {
                 logger.info("--------Handling Job complete/trigger of: {} ---------------", triggerJob);
             }
             if (ENDLOOP_JOB.equals(triggerJob)) {
-                bLoop = false;
                 break;
             }
             logger.debug("--------Handling Job complete/trigger of: {} ---------------", triggerJob);
@@ -104,7 +103,7 @@ public class JobTriggerService {
                     }
                     return null;
                 })
-                .filter(j -> (null != j))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
             if (schangeJobs.isEmpty()){
                 break;
@@ -115,7 +114,7 @@ public class JobTriggerService {
             .filter(j -> (JobTriggerStatus.WAITING == j.getStatus()))
             .filter(j -> (null == j.getChildren() || j.getChildren().isEmpty())) // skip parentJobs
             .collect(Collectors.toList());
-        if (waitJobs.isEmpty()) {
+        if (!waitJobs.isEmpty()) {
             logger.info("-Run following jobs: -");
             waitJobs.forEach(j -> logger.info(j.getName()));
         }
@@ -126,10 +125,9 @@ public class JobTriggerService {
         j.setStatus(JobTriggerStatus.RUNNING);
         final String tgtJob = j.getTargetJob();
         final String args = j.getArguments();
-        final CompletableFuture<JobReturn> fjr = executorFacade
+        return executorFacade
             .execute(j.getName(), tgtJob, args)
             .thenApply(jr -> onJobComplete(j, jr));
-        return fjr;
     }
 
     private JobReturn onJobComplete(IJobTrigger j, JobReturn jr) {

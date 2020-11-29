@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Map;
 
 public interface IJobTrigger {
-    public void setStatus(JobTriggerStatus status);
-    public void setName(final String name);
-    public void setParent(String parent);
-    public void setCondition(final String condition);
-    public void setTimeCondition(final String condition);
-    public void setArguments(final String arguments);
-    public void setDescription(final String description);
-    public void setTargetJob(final String targetJob);
-    public void setTimeZone(final String timezone);
+    public IJobTrigger setStatus(JobTriggerStatus status);
+    public IJobTrigger setName(final String name);
+    public IJobTrigger setParent(String parent);
+    public IJobTrigger setCondition(final String condition);
+    public IJobTrigger setTimeCondition(final String condition);
+    public IJobTrigger setArguments(final String arguments);
+    public IJobTrigger setDescription(final String description);
+    public IJobTrigger setTargetJob(final String targetJob);
+    public IJobTrigger setTimeZone(final String timezone);
 
     public JobTriggerStatus getStatus();
     public String getName();

@@ -45,16 +45,19 @@ public abstract class BaseJobTrigger implements IJobTrigger{
         return parent;
     }
     @Override
-    public void setCondition(String condition) {
+    public IJobTrigger setCondition(String condition) {
         this.condition = condition;
+        return this;
     }
     @Override
-    public void setTimeCondition(String condition) {
+    public IJobTrigger setTimeCondition(String condition) {
         timeCondition = condition;
+        return this;
     }
     @Override
-    public void setArguments(String arguments) {
+    public IJobTrigger setArguments(String arguments) {
         additionalArguments = arguments;
+        return this;
     }
     @Override
     public List<IJobTrigger> getChildren() {
@@ -69,21 +72,26 @@ public abstract class BaseJobTrigger implements IJobTrigger{
         return status;
     }
     @Override
-    public void setName(String name) {
+    public IJobTrigger setName(String name) {
         this.name = name;
+        return this;
     }
     @Override
-    public void setParent(String parent) {
+    public IJobTrigger setParent(String parent) {
         this.parent = parent;
+        return this;
     }
-    public void setInterestList(List<IJobTrigger> interestList) {
+    public IJobTrigger setInterestList(List<IJobTrigger> interestList) {
         this.interestList = interestList;
+        return this;
     }
-    public void setChildren(List<IJobTrigger> children) {
+    public IJobTrigger setChildren(List<IJobTrigger> children) {
         this.children = children;
+        return this;
     }
-    public synchronized void setStatus(JobTriggerStatus status) {
+    public synchronized IJobTrigger setStatus(JobTriggerStatus status) {
         this.status = status;
+        return this;
     }
     @Override
     public String getCondition() {
@@ -98,24 +106,27 @@ public abstract class BaseJobTrigger implements IJobTrigger{
         return additionalArguments;
     }
     @Override
-    public void setDescription(String description) {
+    public BaseJobTrigger setDescription(String description) {
         this.description = description;
+        return this;
     }
     @Override
     public String getDescription() {
         return description;
     }
     @Override
-    public void setTargetJob(String targetJob) {
+    public IJobTrigger setTargetJob(String targetJob) {
         this.targetJob = targetJob;
+        return this;
     }
     @Override
     public String getTargetJob() {
         return targetJob;
     }
     @Override
-    public void setTimeZone(String timezone) {
+    public IJobTrigger setTimeZone(String timezone) {
         this.timezone = timezone;
+        return this;
     }
     @Override
     public String getTimezone() {
@@ -124,7 +135,8 @@ public abstract class BaseJobTrigger implements IJobTrigger{
     public boolean isTime() {
         return isTime;
     }
-    public void setTime(boolean isTime) {
+    public IJobTrigger setTime(boolean isTime) {
         this.isTime = isTime;
+        return this;
     }
 }

@@ -12,6 +12,12 @@ import org.slf4j.LoggerFactory;
 public class JobTrigger extends BaseJobTrigger {
     private static final Logger logger = LoggerFactory.getLogger(JobTrigger.class);
 
+    public JobTrigger(final String[] cols) {
+    	//parent,name,timeCondition,condition,targetJob,additionalArguments,description,timezone
+    	setParent(cols[0]).setName(cols[1]).setTimeCondition(cols[2]).setCondition(cols[3])
+    	.setTargetJob(cols[4]).setArguments(cols[5]).setDescription(cols[6]).setTimeZone(cols[7]);
+    }
+    public JobTrigger() {}
     @Override
     public boolean isConditionSatisfied() {
         boolean bret = true;

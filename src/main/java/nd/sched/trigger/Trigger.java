@@ -5,9 +5,9 @@ import java.util.List;
 
 public class Trigger {
 	private String name;
+	private String qualifier;
 	private String job;
 	private String arguments;
-	private String qualifier;
 	private String parent;
 	private String dependencies;
 	//Computed fields:

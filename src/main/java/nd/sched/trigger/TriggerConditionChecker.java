@@ -5,7 +5,7 @@ import java.util.List;
 
 public class TriggerConditionChecker {
 	private TriggerTreeCache triggers;
-	public void setTriggers(TriggerTreeCache triggers) {
+	public void setTriggersCache(TriggerTreeCache triggers) {
 		this.triggers = triggers;
 	}
 	

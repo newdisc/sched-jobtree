@@ -9,7 +9,7 @@ public class TriggerTreeCache extends HashMap<String, Trigger> {
 		if (null == dep) {
 			return false;
 		}
-		trigger.addInterested(dep);
+		dep.addInterested(trigger);
 		return true;
 	}
 }

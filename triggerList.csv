@@ -1,0 +1,4 @@
+parent,name,qualifier,condition,targetJob,additionalArguments,description,timezone
+,root,localhost,,,arguments Unused,Daily Run box at5	0	?	*	1-5,Europe/London
+root,echo_trig,localhost,sleep_trig,EchoJob,abc d e,Test echo of all arguments - start with box after sleep,Europe/London
+root,sleep_trig,localhost,,SleepJob,10,Test sleep wait - immediate start with box,Europe/London

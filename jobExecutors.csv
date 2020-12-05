@@ -1,0 +1,6 @@
+type,name,fullCommand
+CommandJob,EchoJob,echo %USERNAME%
+CommandJob,SetJob,set
+CommandJob,DirJob,dir
+CommandJob,SleepJob,sleep  
+CompareJob,CompareLogs,EchoJobOut.txt

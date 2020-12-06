@@ -55,6 +55,10 @@ public class TriggerService {
 		if (null == trigger) {
 			logger.info("NOT found {}", triggerName);
 		}
+		if (null == trigger.getJob() || trigger.getJob().isEmpty()) {
+			trigger.setStatus(TriggerStatus.RUNNING);
+			initiateDependents(trigger);//This will run in various threads or recursively
+		}
 		final IJobExecutorService jes = jobExecutors.get(trigger.getQualifier());
 		jes.initiateExecute(trigger.getName(), trigger.getJob(), trigger.getArguments(), jr -> {
 			if (JobStatus.SUCCESS == jr.getJobStatus()) {

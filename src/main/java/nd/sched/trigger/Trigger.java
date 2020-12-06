@@ -3,6 +3,8 @@ package nd.sched.trigger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Trigger {
 	private String name;
 	private String qualifier;
@@ -11,6 +13,7 @@ public class Trigger {
 	private String parent;
 	private String dependencies;
 	//Computed fields:
+	@JsonIgnore
 	private List<Trigger> interested = new ArrayList<>();
 	private TriggerStatus status;
 

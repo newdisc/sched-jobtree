@@ -15,6 +15,8 @@ public class Trigger {
 	//Computed fields:
 	@JsonIgnore
 	private List<Trigger> interested = new ArrayList<>();
+	@JsonIgnore
+	private List<Trigger> children = new ArrayList<>();
 	private TriggerStatus status;
 
 	public String getJob() {
@@ -71,5 +73,12 @@ public class Trigger {
 	public Trigger addInterested(final Trigger trig) {
 		interested.add(trig);
 		return this;
+	}
+	public Trigger addChild(final Trigger trig) {
+		children.add(trig);
+		return this;
+	}
+	public List<Trigger> getChildren() {
+		return children;
 	}
 }

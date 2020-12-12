@@ -12,4 +12,20 @@ public class TriggerTreeCache extends HashMap<String, Trigger> {
 		dep.addInterested(trigger);
 		return true;
 	}
+	public void addParent(Trigger trigger) {
+		final Trigger parent = get(trigger.getParent());
+		if (null == parent) {
+			return;
+		}
+		parent.addChild(trigger);
+	}
+	public TriggerTreeCache updateTriggersInterest(final TriggerConditionChecker conditionChecker) {
+		values().stream().forEach(trigger -> {
+			addInterested(trigger, trigger.getParent());
+			addParent(trigger);
+			conditionChecker.getDependents(trigger.getDependencies())
+				.forEach(dep -> addInterested(trigger, dep));
+		});
+		return this;
+	}
 }

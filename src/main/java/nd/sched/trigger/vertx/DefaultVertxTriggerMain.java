@@ -51,7 +51,7 @@ public class DefaultVertxTriggerMain extends DefaultVertxMain {
 		tdao.registerTriggers();
 		tcv.setTriggerDAO(tdao);
 		
-		ts.updateTriggersInterest();
+		ttc.updateTriggersInterest(tcc);
 		return tcv;
 	}
 }

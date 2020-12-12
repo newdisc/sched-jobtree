@@ -13,7 +13,7 @@ public class TriggerService {
 	private static final Logger logger = LoggerFactory.getLogger(TriggerService.class);
 	private TriggerTreeCache triggersCache;
 	private TriggerConditionChecker conditionChecker;
-	private Map<String, IJobExecutorService> jobExecutors = new TreeMap<String, IJobExecutorService>(); 
+	private Map<String, IJobExecutorService> jobExecutors = new TreeMap<>(); 
 	public TriggerService updateTriggersInterest() {
 		triggersCache.values().stream().forEach(trigger -> {
 			triggersCache.addInterested(trigger, trigger.getParent());
@@ -35,7 +35,7 @@ public class TriggerService {
 		triggersCache.keySet().stream().filter(this::isTriggerConditionsOK).map(triggersCache::get)
 			.forEach(trig -> {
 				logger.info("Running Trigger: {}", trig.getName());
-				//trig.
+				initiateDependents(trig);
 		});
 	}
 	public void initiateDependents(final Trigger trigger) {
@@ -54,6 +54,7 @@ public class TriggerService {
 		final Trigger trigger = triggersCache.get(triggerName);
 		if (null == trigger) {
 			logger.info("NOT found {}", triggerName);
+			return;
 		}
 		if (null == trigger.getJob() || trigger.getJob().isEmpty()) {
 			trigger.setStatus(TriggerStatus.RUNNING);

@@ -15,7 +15,11 @@ import nd.sched.trigger.TriggerService;
 import nd.sched.trigger.TriggerTreeCache;
 
 public class DefaultVertxTriggerMain extends DefaultVertxMain {
-	private static final Logger logger = LoggerFactory.getLogger(DefaultVertxMain.class);
+	static {
+		System.setProperty("logback.configurationFile", "./logback.xml");
+		System.setProperty("vertx.options.maxEventLoopExecuteTime", "10000000000");
+	}
+	private static final Logger logger = LoggerFactory.getLogger(DefaultVertxTriggerMain.class);
 	public static void main(String[] args) throws Exception{
 		// Create the pieces needed and link together - can use spring instead
 		logger.info("Creating default Vertx");

@@ -16,7 +16,7 @@ import nd.sched.trigger.TriggerDAO;
 import nd.sched.trigger.TriggerService;
 import nd.sched.trigger.TriggerTreeCache;
 
-public class TriggerControllerVertx extends HandlerBase {
+public class TriggerControllerVertx implements HandlerBase {
 	private static final Logger logger = LoggerFactory.getLogger(TriggerControllerVertx.class);
 	private static final String CONTENT_TYPE = "content-type";
 	private static final String JSON_UTF8 = "application/json; charset=utf-8";

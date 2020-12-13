@@ -2,6 +2,8 @@ package nd.sched.trigger;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,27 +19,40 @@ public class TriggerConditionChecker {
 		return Arrays.asList(dependentLine.split(",", -1));
 	}
 	public boolean isParentRunning(final Trigger tocheck) {
-		logger.info("Checking: {} Parent: {}", tocheck.getName(), tocheck.getParent());
+		boolean ret = true;
+		String stat = "UNKNOWN";
 		final Trigger parent = triggers.get(tocheck.getParent());
 		if (null != parent) {
 			final TriggerStatus pstat = parent.getStatus();
+			stat = pstat.name();
 			if (TriggerStatus.RUNNING != pstat) {
-				return false;
+				ret = false;
 			}
 		}
-		return true;
+		logger.info("Parent check: {} Parent: {} Status: {}", tocheck.getName(), tocheck.getParent(), stat);
+		return ret;
 	}
 	public boolean isTriggerConditionsOK(final Trigger tocheck) {
+		final String current = tocheck.getName();
+		logger.info("Checking ok condition for : {}", current);
 		if (!isParentRunning(tocheck)) {
 			return false;
 		}
-		boolean allNotSuccess = getDependents(tocheck.getDependencies())
-			.stream()
-			.map(triggers::get)
-			.filter(trig -> (null != trig))
+		final String depstr = tocheck.getDependencies();
+		final List<Trigger> dependents = getDependents(depstr)
+				.stream()
+				.map(triggers::get)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
+		if (null != depstr && !"".equals(depstr)) {
+			if (0 == dependents.size()) {
+				logger.error("Did NOT find any dependents from: {}", depstr);
+			}
+		}
+		boolean allNotSuccess = dependents.stream()
 			.anyMatch(trig -> {
 				final TriggerStatus ts = trig.getStatus();
-				logger.info("Checking: {} Status: {}", trig.getName(), ts);
+				logger.info("Dependencies check : {} check: {} Status: {}", current, trig.getName(), ts);
 				return (TriggerStatus.SUCCESS != trig.getStatus());
 			})
 			;

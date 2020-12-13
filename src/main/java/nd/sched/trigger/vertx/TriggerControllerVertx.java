@@ -36,7 +36,7 @@ public class TriggerControllerVertx implements HandlerBase {
 	}
 	
 	public void list(final RoutingContext rc){
-		logger.info("Trigger List: ");
+		logger.debug("Trigger List: ");
 		final List<Trigger> allTrigs = triggerCache.entrySet().stream()
 				.map(Map.Entry<String,Trigger>::getValue).collect(Collectors.toList());
 		rc.response()

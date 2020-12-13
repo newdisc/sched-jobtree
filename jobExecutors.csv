@@ -1,6 +1,7 @@
-type,name,fullCommand
+type,name,fullCommand,Additional
 CommandJob,EchoJob,echo %USERNAME%
 CommandJob,SetJob,set
 CommandJob,DirJob,dir
 CommandJob,SleepJob,sleep  
 CompareJob,CompareLogs,EchoJobOut.txt
+CronJob,QuartzWakeJob,0 0/2 * * * ?,Europe/London

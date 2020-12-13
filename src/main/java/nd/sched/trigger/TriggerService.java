@@ -1,13 +1,16 @@
 package nd.sched.trigger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import nd.sched.job.JobReturn;
 import nd.sched.job.JobReturn.JobStatus;
+import nd.sched.job.impl.TimerJobExecutor;
 import nd.sched.job.service.IJobExecutorService;
 
 public class TriggerService {
@@ -32,18 +35,40 @@ public class TriggerService {
 		});
 	}
 	public void initiateDependents(final Trigger trigger) {
-		trigger.getInterested().stream().filter(conditionChecker::isTriggerConditionsOK).forEach(runTrig -> {
-			logger.info("Initiating Run: {}", runTrig.getName());
-			final IJobExecutorService jes = jobExecutors.get(runTrig.getQualifier());
+		final List<Trigger> conditionOK = trigger.getInterested().stream()
+				.filter(conditionChecker::isTriggerConditionsOK).collect(Collectors.toList());
+		final List<String> okNames = conditionOK.stream().map(Trigger::getName).collect(Collectors.toList());
+		final String tName = trigger.getName();
+		logger.info("List of Interested of {} ready to run: {}", tName, okNames);
+		conditionOK.forEach(runTrig -> {
+			final String rName = runTrig.getName();
+			final String rJob = runTrig.getJob();
+			final String rQual = runTrig.getQualifier();
+			logger.debug("Initiating Run: {} from: {}", rName, tName);
+			if (null ==  rJob || "".equals(rJob) || null == rQual || "".equals(rQual)) {
+				logger.debug("Nothing to Run: {} from: {}", rName, tName);
+				runTrig.setStatus(TriggerStatus.SUCCESS);
+				JobReturn jr = new JobReturn();
+				jr.setJobStatus(JobStatus.SUCCESS);
+				jobCallback(runTrig, jr);
+				return;
+			}
+			final IJobExecutorService jes = jobExecutors.get(rQual);
 			jes.initiateExecute(runTrig.getName(), runTrig.getJob(), 
 					runTrig.getArguments(), jr -> jobCallback(runTrig, jr));
+			logger.debug("Done Run: {} from: {}", rName, tName);
 		});
+		logger.info("Done interested jobs run {}", tName);
+		updateParentStatus(trigger);
+	}
+	protected void updateParentStatus(final Trigger trigger) {
 		final Trigger parent = triggersCache.get(trigger.getParent());
 		if (null == parent) { // top level box
 			return;
 		}
 		final boolean parentComplete = parent.getChildren().stream().allMatch(
 				child -> ((TriggerStatus.SUCCESS == child.getStatus()) || (TriggerStatus.FAILURE == child.getStatus())));
+		logger.info("Updating status of trigger: {}, parent: {}, complete: {}", trigger.getName(), parent.getName(), parentComplete);
 		if (parentComplete) {
 			final boolean parentFail = parent.getChildren().stream().anyMatch(
 					child -> (TriggerStatus.FAILURE == child.getStatus()));
@@ -67,6 +92,7 @@ public class TriggerService {
 				trigger.getArguments(), jr -> jobCallback(trigger, jr));		
 	}
 	protected JobReturn jobCallback(final Trigger trigger, JobReturn jr) {
+		logger.info("Called back from: {}, status: {}", trigger.getName(), jr.getJobStatus());
 		final JobStatus js = jr.getJobStatus();
 		final TriggerStatus ts = TriggerStatus.getTriggerStatus(js);
 		trigger.setStatus(ts);

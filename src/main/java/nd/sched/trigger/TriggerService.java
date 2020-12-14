@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import nd.sched.job.BaseJobExecutor;
 import nd.sched.job.JobReturn;
 import nd.sched.job.JobReturn.JobStatus;
 import nd.sched.job.impl.TimerJobExecutor;
@@ -74,6 +75,14 @@ public class TriggerService {
 					child -> (TriggerStatus.FAILURE == child.getStatus()));
 			final TriggerStatus parentStatus = parentFail ? TriggerStatus.FAILURE : TriggerStatus.SUCCESS;
 			parent.setStatus(parentStatus); // no need to notify anyone?
+			final IJobExecutorService jes = jobExecutors.get(trigger.getQualifier());
+			if (null == jes) {
+				return;
+			}
+			final BaseJobExecutor bje = jes.getDetails(trigger.getName(), trigger.getJob());
+			if (TimerJobExecutor.TYPE.equals(bje.getType())) {
+				jes.stop(trigger.getName(), trigger.getJob());
+			}
 		}
 	}
 	public void forceStart(final String triggerName) {
@@ -98,7 +107,6 @@ public class TriggerService {
 		trigger.setStatus(ts);
 		if (JobStatus.SUCCESS == jr.getJobStatus()) {
 			initiateDependents(trigger);//This will run in various threads or recursively
-			trigger.setStatus(TriggerStatus.SUCCESS);
 		}
 		return jr;
 	}

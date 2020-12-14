@@ -29,12 +29,12 @@ public class TriggerConditionChecker {
 				ret = false;
 			}
 		}
-		logger.info("Parent check: {} Parent: {} Status: {}", tocheck.getName(), tocheck.getParent(), stat);
+		logger.debug("Parent check: {} Parent: {} Status: {}", tocheck.getName(), tocheck.getParent(), stat);
 		return ret;
 	}
 	public boolean isTriggerConditionsOK(final Trigger tocheck) {
 		final String current = tocheck.getName();
-		logger.info("Checking ok condition for : {}", current);
+		logger.debug("Checking ok condition for : {}", current);
 		if (!isParentRunning(tocheck)) {
 			return false;
 		}
@@ -52,7 +52,7 @@ public class TriggerConditionChecker {
 		boolean allNotSuccess = dependents.stream()
 			.anyMatch(trig -> {
 				final TriggerStatus ts = trig.getStatus();
-				logger.info("Dependencies check : {} check: {} Status: {}", current, trig.getName(), ts);
+				logger.debug("Dependencies check : {} check: {} Status: {}", current, trig.getName(), ts);
 				return (TriggerStatus.SUCCESS != trig.getStatus());
 			})
 			;

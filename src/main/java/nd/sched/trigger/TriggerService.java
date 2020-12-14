@@ -69,7 +69,7 @@ public class TriggerService {
 		}
 		final boolean parentComplete = parent.getChildren().stream().allMatch(
 				child -> ((TriggerStatus.SUCCESS == child.getStatus()) || (TriggerStatus.FAILURE == child.getStatus())));
-		logger.info("Updating status of trigger: {}, parent: {}, complete: {}", trigger.getName(), parent.getName(), parentComplete);
+		logger.info("Updating parent status trigger: {}, parent: {}, complete: {}", trigger.getName(), parent.getName(), parentComplete);
 		if (parentComplete) {
 			final boolean parentFail = parent.getChildren().stream().anyMatch(
 					child -> (TriggerStatus.FAILURE == child.getStatus()));
@@ -101,7 +101,7 @@ public class TriggerService {
 				trigger.getArguments(), jr -> jobCallback(trigger, jr));		
 	}
 	protected JobReturn jobCallback(final Trigger trigger, JobReturn jr) {
-		logger.info("Called back from: {}, status: {}", trigger.getName(), jr.getJobStatus());
+		logger.info("Call back from: {}, status: {}", trigger.getName(), jr.getJobStatus());
 		final JobStatus js = jr.getJobStatus();
 		final TriggerStatus ts = TriggerStatus.getTriggerStatus(js);
 		trigger.setStatus(ts);

@@ -5,3 +5,4 @@ root,sleep_trig,localhost,,SleepJob,10,Test sleep wait - immediate start with bo
 root,compare_echo,localhost,echo_trig,CompareLogs,logs/20201206-echo_trig-EchoJob.out,Test Compare
 root,quartz_wake,localhost,,QuartzWakeJob,unused,TestQuartz
 root,join_all,,"compare_echo,quartz_wake",,unused,wake 2 min,Europe/London
+root,corona_table,localhost,join_all,CoronaTable,,Corona World Table,

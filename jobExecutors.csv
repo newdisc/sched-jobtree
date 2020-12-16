@@ -5,3 +5,4 @@ CommandJob,DirJob,dir
 CommandJob,SleepJob,sleep  
 CompareJob,CompareLogs,EchoJobOut.txt
 CronJob,QuartzWakeJob,0 0/2 * * * ?,Europe/London
+HTTP_Table,CoronaTable,https://www.worldometers.info/coronavirus/,table#main_table_countries_today
